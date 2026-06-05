@@ -1,0 +1,53 @@
+[build-system]
+requires = ["setuptools>=68"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "meshview"
+version = "0.1.0"
+description = "Lightweight 3D finite-element mesh viewer for Abaqus .inp/.blk files"
+readme = "README.md"
+requires-python = ">=3.10"
+license = { text = "MIT" }
+authors = [{ name = "AbaqusMeshRenderer" }]
+
+# Runtime dependencies. Versions pinned to those verified during Phase 0
+# packaging so that the onefile build is reproducible.
+dependencies = [
+    "numpy==2.4.6",
+    "moderngl==5.12.0",
+    "moderngl-window==3.1.1",
+    "pyglet==2.1.14",
+    "meshio==5.3.5",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest==9.0.3",
+    "ruff==0.15.16",
+]
+build = [
+    "pyinstaller>=6.0",
+]
+
+[project.scripts]
+meshview = "meshview.app.main:main"
+
+[tool.setuptools.packages.find]
+include = ["meshview*"]
+
+[tool.setuptools.package-data]
+"meshview.render" = ["shaders/*.glsl"]
+
+[tool.pytest.ini_options]
+testpaths = ["tests"]
+markers = [
+    "gl: tests that require a real OpenGL context (skipped when unavailable)",
+]
+
+[tool.ruff]
+line-length = 100
+target-version = "py310"
+
+[tool.ruff.lint]
+select = ["E", "F", "I", "W", "UP", "B"]

@@ -1,0 +1,18 @@
+** Two linear hexahedra forming a 2x1x1 block; they share one internal face.
+** Exterior-surface extraction must drop that shared face.
+*NODE
+1, 0.0, 0.0, 0.0
+2, 1.0, 0.0, 0.0
+3, 1.0, 1.0, 0.0
+4, 0.0, 1.0, 0.0
+5, 0.0, 0.0, 1.0
+6, 1.0, 0.0, 1.0
+7, 1.0, 1.0, 1.0
+8, 0.0, 1.0, 1.0
+9, 2.0, 0.0, 0.0
+10, 2.0, 1.0, 0.0
+11, 2.0, 0.0, 1.0
+12, 2.0, 1.0, 1.0
+*ELEMENT, TYPE=C3D8, ELSET=BLOCK
+1, 1, 2, 3, 4, 5, 6, 7, 8
+2, 2, 9, 10, 3, 6, 11, 12, 7

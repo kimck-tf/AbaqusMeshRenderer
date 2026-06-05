@@ -1,0 +1,11 @@
+# Pinned runtime dependencies (verified during Phase 0 packaging).
+# Mirrors [project.dependencies] in pyproject.toml.
+numpy==2.4.6
+moderngl==5.12.0
+moderngl-window==3.1.1
+pyglet==2.1.14
+meshio==5.3.5
+
+# Dev / build (optional)
+pytest==9.0.3
+ruff==0.15.16
