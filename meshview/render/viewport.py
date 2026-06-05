@@ -10,6 +10,8 @@ a window (see ``tests/test_controls.py``).
 from __future__ import annotations
 
 import logging
+import queue
+import threading
 
 import moderngl
 import moderngl_window as mglw
@@ -59,20 +61,51 @@ class ViewportConfig(mglw.WindowConfig):
         self._press_button: str | None = None
         self._moved = False
 
+        # Parsing + surface extraction run on a worker thread; the finished
+        # Surface is handed back here and turned into GPU buffers on the main
+        # (GL) thread inside on_render, so a big file never freezes the UI.
+        self._result_q: queue.Queue = queue.Queue()
+        self._loading = False
+
         if self.initial_mesh_path:
             self.load(self.initial_mesh_path)
 
-    # --- mesh loading ---
+    # --- mesh loading (non-blocking) ---
     def load(self, path: str) -> None:
+        """Kick off a background load; the result is applied in on_render."""
+
+        self._loading = True
+        self.wnd.title = f"meshview — loading {path} …"
+        log.info("loading %s …", path)
+        threading.Thread(target=self._load_worker, args=(path,), daemon=True).start()
+
+    def _load_worker(self, path: str) -> None:
         try:
             mesh = load_mesh(path)
-        except Exception as exc:  # noqa: BLE001 - surface any load error to the user
-            log.error("failed to load %s: %s", path, exc)
+            surface = extract_surface(mesh)
+            self._result_q.put((path, mesh, surface, None))
+        except Exception as exc:  # noqa: BLE001 - report any load error to the UI
+            self._result_q.put((path, None, None, exc))
+
+    def _drain_load_results(self) -> None:
+        latest = None
+        try:
+            while True:
+                latest = self._result_q.get_nowait()
+        except queue.Empty:
+            pass
+        if latest is not None:
+            self._apply_loaded(*latest)
+
+    def _apply_loaded(self, path, mesh, surface, error) -> None:
+        self._loading = False
+        if error is not None:
+            log.error("failed to load %s: %s", path, error)
+            self.wnd.title = "meshview"
             return
-        surface = extract_surface(mesh)
         if self.renderer is not None:
             self.renderer.release()
-        self.renderer = MeshRenderer(self.ctx, surface)
+        self.renderer = MeshRenderer(self.ctx, surface)  # GL upload on main thread
 
         lo, hi = mesh.bounding_box()
         self.state.bbox = (lo, hi)
@@ -121,6 +154,7 @@ class ViewportConfig(mglw.WindowConfig):
 
     # --- render ---
     def on_render(self, time: float, frame_time: float) -> None:
+        self._drain_load_results()
         self.ctx.clear(*self._bg)
         if self.renderer is None:
             return
