@@ -12,7 +12,13 @@ from dataclasses import dataclass, field
 
 import numpy as np
 
-from .arcball import quat_identity, quat_multiply, quat_normalize, quat_to_mat3
+from .arcball import (
+    quat_from_mat3,
+    quat_identity,
+    quat_multiply,
+    quat_normalize,
+    quat_to_mat3,
+)
 
 
 def translation_matrix(t: np.ndarray) -> np.ndarray:
@@ -53,6 +59,32 @@ def perspective(fovy: float, aspect: float, near: float, far: float) -> np.ndarr
     m[2, 3] = (2.0 * far * near) / (near - far)
     m[3, 2] = -1.0
     return m
+
+
+def look_rotation(forward, up) -> np.ndarray:
+    """Orientation quaternion for a camera looking along ``forward``."""
+
+    f = np.asarray(forward, dtype=np.float64)
+    f = f / np.linalg.norm(f)
+    up = np.asarray(up, dtype=np.float64)
+    s = np.cross(f, up)
+    s = s / np.linalg.norm(s)
+    u = np.cross(s, f)
+    r = np.array([s, u, -f])  # rows: right, up, -forward (world->view)
+    return quat_from_mat3(r)
+
+
+# Standard orthographic-style orientations (Numpad views). Y is treated as up
+# for front/back/left/right; Z as up for top/bottom.
+STANDARD_VIEWS = {
+    "front": look_rotation((0, 0, -1), (0, 1, 0)),
+    "back": look_rotation((0, 0, 1), (0, 1, 0)),
+    "right": look_rotation((-1, 0, 0), (0, 1, 0)),
+    "left": look_rotation((1, 0, 0), (0, 1, 0)),
+    "top": look_rotation((0, -1, 0), (0, 0, 1)),
+    "bottom": look_rotation((0, 1, 0), (0, 0, -1)),
+    "iso": look_rotation((-1, -1, -1), (0, 1, 0)),
+}
 
 
 @dataclass
