@@ -44,6 +44,14 @@ def test_second_order_membrane_triangle_uses_corner_nodes_only():
     assert topo.faces == ((0, 1, 2),)
 
 
+def test_second_order_membrane_quad_uses_corner_nodes_only():
+    # M3D8/M3D9 (8- and 9-node quadrilateral membranes) map to the 4-node quad.
+    for name in ("M3D8", "M3D8R", "M3D9", "M3D9R"):
+        topo = get_topology(name)
+        assert topo.n_corner == 4
+        assert topo.faces == ((0, 1, 2, 3),)
+
+
 def test_unsupported_type_returns_none():
     assert get_topology("DASHPOTA") is None
     assert not is_supported("DASHPOTA")
@@ -137,6 +145,19 @@ def test_m3d6_membrane_passthrough():
     assert not mesh.ignored_elements
     assert surf.n_triangles == 1  # one membrane triangle
     assert surf.n_vertices == 3   # mid-side nodes never reach the surface
+
+
+def test_m3d9_membrane_passthrough():
+    # Corners 1-4, mid-side 5-8, centre 9 (Abaqus M3D9 ordering).
+    mesh = parse_abaqus_string(
+        "*NODE\n1,0,0,0\n2,2,0,0\n3,2,2,0\n4,0,2,0\n"
+        "5,1,0,0\n6,2,1,0\n7,1,2,0\n8,0,1,0\n9,1,1,0\n"
+        "*ELEMENT, TYPE=M3D9\n1,1,2,3,4,5,6,7,8,9\n"
+    )
+    surf = extract_surface(mesh)
+    assert not mesh.ignored_elements
+    assert surf.n_triangles == 2  # one quad membrane -> 2 triangles
+    assert surf.n_vertices == 4   # mid-side and centre nodes are excluded
 
 
 def test_direct_vertex_normals_helper():
