@@ -1,5 +1,6 @@
 from __future__ import annotations
 
+import os
 import sys
 from pathlib import Path
 from types import ModuleType
@@ -15,7 +16,8 @@ def _capture_pyinstaller_args(monkeypatch, tmp_path: Path) -> list[str]:
 
     def fake_run(args: list[str]) -> None:
         captured.extend(args)
-        output = tmp_path / "dist" / "meshview.exe"
+        # build.build() looks for the platform's artifact name, not always .exe.
+        output = tmp_path / "dist" / ("meshview.exe" if os.name == "nt" else "meshview")
         output.parent.mkdir()
         output.touch()
 
