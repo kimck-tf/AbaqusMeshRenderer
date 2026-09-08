@@ -118,7 +118,12 @@ _register(_PYRAMID, "C3D5", "C3D5H", "C3D13")
 # Shells / membranes / rigid surfaces — triangles
 _register(_TRIANGLE, "S3", "S3R", "STRI3", "S6", "M3D3", "M3D6", "R3D3")
 # Shells / membranes / rigid surfaces — quads
-_register(_QUAD, "S4", "S4R", "S4RS", "S4R5", "S8", "S8R", "M3D4", "M3D4R", "R3D4")
+_register(
+    _QUAD,
+    "S4", "S4R", "S4RS", "S4R5", "S8", "S8R",
+    "M3D4", "M3D4R", "M3D8", "M3D8R", "M3D9", "M3D9R",
+    "R3D4",
+)
 
 
 def get_topology(elem_type: str) -> Topology | None:
