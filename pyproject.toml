@@ -41,6 +41,10 @@ include = ["meshview*"]
 
 [tool.pytest.ini_options]
 testpaths = ["tests"]
+# The package is not installed in CI, and the bare `pytest` console script only
+# prepends tests/ to sys.path -- put the repo root there so `import meshview`
+# resolves however the suite is invoked.
+pythonpath = ["."]
 markers = [
     "gl: tests that require a real OpenGL context (skipped when unavailable)",
 ]
