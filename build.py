@@ -52,6 +52,7 @@ def build(upx: bool = False, debug: bool = False) -> int:
     if not upx:
         args.append("--noupx")  # otherwise PyInstaller uses UPX if found on PATH
     if not debug:
+        args.append("--windowed")
         args.append("--log-level=WARN")
 
     print("Running PyInstaller:\n  " + " ".join(args))

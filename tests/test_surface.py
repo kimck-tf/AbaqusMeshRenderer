@@ -37,6 +37,13 @@ def test_second_order_uses_corner_nodes_only():
     assert max_index < 4  # mid-side nodes (>=4) never appear in a face
 
 
+def test_second_order_membrane_triangle_uses_corner_nodes_only():
+    # M3D6 (6-node triangular membrane) maps to the 3-node triangle topology.
+    topo = get_topology("M3D6")
+    assert topo.n_corner == 3
+    assert topo.faces == ((0, 1, 2),)
+
+
 def test_unsupported_type_returns_none():
     assert get_topology("DASHPOTA") is None
     assert not is_supported("DASHPOTA")
@@ -118,6 +125,18 @@ def test_shell_quad_passthrough():
     surf = extract_surface(mesh)
     assert surf.n_triangles == 2  # one quad shell -> 2 triangles
     assert surf.n_vertices == 4
+
+
+def test_m3d6_membrane_passthrough():
+    # Corners 1-3, mid-side 4-6 (Abaqus M3D6 ordering).
+    mesh = parse_abaqus_string(
+        "*NODE\n1,0,0,0\n2,2,0,0\n3,0,2,0\n4,1,0,0\n5,1,1,0\n6,0,1,0\n"
+        "*ELEMENT, TYPE=M3D6\n1,1,2,3,4,5,6\n"
+    )
+    surf = extract_surface(mesh)
+    assert not mesh.ignored_elements
+    assert surf.n_triangles == 1  # one membrane triangle
+    assert surf.n_vertices == 3   # mid-side nodes never reach the surface
 
 
 def test_direct_vertex_normals_helper():

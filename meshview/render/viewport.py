@@ -244,4 +244,5 @@ def run_viewer(mesh_path: str | None = None) -> None:
     """Launch the interactive viewer, optionally loading ``mesh_path`` first."""
 
     ViewportConfig.initial_mesh_path = mesh_path
-    mglw.run_window_config(ViewportConfig, args=[])
+    # A truthy no-op list prevents moderngl-window from re-parsing sys.argv.
+    mglw.run_window_config(ViewportConfig, args=["--size_mult", "1"])
